@@ -1,5 +1,6 @@
 package com.frztech.patientService.service;
 
+import com.frztech.patientService.dto.PatientRequestDTO;
 import com.frztech.patientService.dto.PatientResponseDTO;
 import com.frztech.patientService.mapper.PatientMapper;
 import com.frztech.patientService.model.Patient;
@@ -17,6 +18,7 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
+    //get all patients
     public List<PatientResponseDTO> getPatients() {
         //retrieve lists of patients
         List<Patient> patients = patientRepository.findAll();
@@ -25,5 +27,13 @@ public class PatientService {
         return patients.stream()
                 .map(PatientMapper::toDTO)
                 .toList();
+    }
+
+    public PatientResponseDTO createPatient(PatientRequestDTO patientRequestDTO) {
+        //create an entry in the db
+        Patient newPatient = patientRepository.save(PatientMapper.toModel(patientRequestDTO));
+
+        //return the newly created patient
+        return PatientMapper.toDTO(newPatient);
     }
 }

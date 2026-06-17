@@ -1,7 +1,10 @@
 package com.frztech.patientService.mapper;
 
+import com.frztech.patientService.dto.PatientRequestDTO;
 import com.frztech.patientService.dto.PatientResponseDTO;
 import com.frztech.patientService.model.Patient;
+
+import java.time.LocalDate;
 
 public class PatientMapper {
 
@@ -16,5 +19,17 @@ public class PatientMapper {
 
         return patientDTO;
 
+    }
+
+    public static Patient toModel(PatientRequestDTO patientRequestDTO) {
+        Patient patient = new Patient();
+
+        patient.setName(patientRequestDTO.getName());
+        patient.setAddress(patientRequestDTO.getAddress());
+        patient.setEmail(patientRequestDTO.getEmail());
+        patient.setDateOfBirth(LocalDate.parse(patientRequestDTO.getDateOfBirth()));
+        patient.setRegisteredDate(LocalDate.parse(patientRequestDTO.getRegisteredDate()));
+
+        return patient;
     }
 }
