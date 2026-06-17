@@ -2,6 +2,7 @@ package com.frztech.patientService.controller;
 
 import com.frztech.patientService.dto.PatientRequestDTO;
 import com.frztech.patientService.dto.PatientResponseDTO;
+import com.frztech.patientService.dto.validators.CreatePatientValidationGroup;
 import com.frztech.patientService.service.PatientService;
 import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
@@ -30,7 +31,7 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<PatientResponseDTO> createPatient(@Valid @RequestBody PatientRequestDTO patientRequestDTO) {
+    public ResponseEntity<PatientResponseDTO> createPatient(@Validated({CreatePatientValidationGroup.class}) @RequestBody PatientRequestDTO patientRequestDTO) {
         PatientResponseDTO patientResponseDTO = patientService.createPatient(patientRequestDTO);
 
         return ResponseEntity.ok().body(patientResponseDTO);
