@@ -33,7 +33,6 @@ public class Patient {
     public UUID getId() {
         return id;
     }
-
     public void setId(UUID id) {
         this.id = id;
     }
@@ -41,7 +40,6 @@ public class Patient {
     public @NotNull String getName() {
         return name;
     }
-
     public void setName(@NotNull String name) {
         this.name = name;
     }
@@ -49,7 +47,6 @@ public class Patient {
     public @NotNull @Email String getEmail() {
         return email;
     }
-
     public void setEmail(@NotNull @Email String email) {
         this.email = email;
     }
@@ -57,7 +54,6 @@ public class Patient {
     public @NotNull String getAddress() {
         return address;
     }
-
     public void setAddress(@NotNull String address) {
         this.address = address;
     }
@@ -65,7 +61,6 @@ public class Patient {
     public @NotNull LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
-
     public void setDateOfBirth(@NotNull LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
@@ -73,7 +68,6 @@ public class Patient {
     public @NotNull LocalDate getRegisteredDate() {
         return registeredDate;
     }
-
     public void setRegisteredDate(@NotNull LocalDate registeredDate) {
         this.registeredDate = registeredDate;
     }
