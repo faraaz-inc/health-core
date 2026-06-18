@@ -67,5 +67,10 @@ public class PatientService {
 
         //return updated patient object
         return PatientMapper.toDTO(updatedPatient);
+
+    }
+    //delete patient by ID
+    public void deletePatient(UUID id) {
+        patientRepository.deleteById(id);
     }
 }
