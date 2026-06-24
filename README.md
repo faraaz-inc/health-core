@@ -217,6 +217,7 @@ Response message:
 - Java 25
 - Maven 3.9+ or the bundled Maven wrapper (`./mvnw`)
 - Docker, if you want to run the services in containers
+- PostgreSQL, either running locally or as a Docker container before starting `patient-service`
 
 ## Local setup
 
@@ -254,48 +255,52 @@ BILLING_SERVICE_ADDRESS=localhost BILLING_SERVICE_GRPC_PORT=9001 ./mvnw spring-b
 
 Each microservice has its own Dockerfile.
 
+Before starting the project, create a PostgreSQL instance that `patient-service` can reach on the Docker network. The service expects the database host to be available as `patient-service-db` on the `docker-internal` network, with credentials passed through environment variables.
+
+### 1) Create the Docker network
+
+```bash
+docker network create docker-internal
+```
+
+### 2) Start PostgreSQL
+
+```bash
+docker run --name=patient-service-db -d \
+  --network docker-internal \
+  -e POSTGRES_DB=patient_service_db \
+  -e POSTGRES_USER=<username>> \
+  -e POSTGRES_PASSWORD=<password> \
+  -p 5432:5432 \
+  postgres:16
+```
+
+Use the same database name and credentials in the `patient-service` environment variables shown below.
+
 ### Build the images
 
 ```bash
-docker build -t billing-service ./billing-service
-docker build -t patient-service ./patient-service
-```
-
-### Recommended container network
-
-Create a shared network so the patient service can reach the billing service by container name:
-
-```bash
-docker network create health-core-net
+docker build -t billing-service:v1 ./billing-service
+docker build -t patient-service:v1 ./patient-service
 ```
 
 ### Run `billing-service`
 
 ```bash
-docker run -d \
-  --name billing-service \
-  --network health-core-net \
-  -p 4001:4001 \
-  -p 9001:9001 \
-  billing-service
+docker run --name=billing-service -d --network docker-internal -p 4001:4001 -p 9001:9001 billing-service:v1
 ```
 
 ### Run `patient-service`
 
 ```bash
-docker run -d \
-  --name patient-service \
-  --network health-core-net \
-  -e BILLING_SERVICE_ADDRESS=billing-service \
-  -e BILLING_SERVICE_GRPC_PORT=9001 \
-  -p 4000:4000 \
-  patient-service
+docker run --name=patient-service -d --network docker-internal -e SPRING_DATASOURCE_URL=jdbc:postgresql://patient-service-db:5432/patient_service_db -e SPRING_DATASOURCE_USERNAME=<username> -e SPRING_DATASOURCE_PASSWORD=<password> -e SPRING_JPA_HIBERNATE_DDL_AUTO=update -e SPRING_SQL_INIT_MODE=always -p 4000:4000 patient-service:v1
 ```
 
 ### Docker notes
 
-- `patient-service` must know how to reach `billing-service`; using the shared Docker network is the easiest option.
-- If you run them on the same machine without Docker networking, set `BILLING_SERVICE_ADDRESS` appropriately.
+- `patient-service` must be able to reach PostgreSQL at `patient-service-db:5432` on the `docker-internal` network.
+- `billing-service` and `patient-service` should both run on the same Docker network (`docker-internal`) so the services can communicate.
+- If you change the database name, username, or password, update the `SPRING_DATASOURCE_*` environment variables accordingly.
 
 ## Configuration reference
 
@@ -307,6 +312,11 @@ docker run -d \
 | `server.port` | `4000` | REST server port |
 | `billing.service.address` | `localhost` | Billing gRPC host |
 | `billing.service.grpc.port` | `9001` | Billing gRPC port |
+| `SPRING_DATASOURCE_URL` | required for PostgreSQL | JDBC URL for the patient database |
+| `SPRING_DATASOURCE_USERNAME` | required for PostgreSQL | PostgreSQL username |
+| `SPRING_DATASOURCE_PASSWORD` | required for PostgreSQL | PostgreSQL password |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | `update` in the Docker example | Hibernate schema strategy |
+| `SPRING_SQL_INIT_MODE` | `always` in the Docker example | Run SQL initialization scripts when present |
 
 Optional standard Spring Boot database properties if you want to externalize the data source:
 
@@ -348,9 +358,10 @@ cd billing-service
 
 ## Troubleshooting
 
+- Start PostgreSQL and make sure it is reachable before starting `patient-service`.
 - Start `billing-service` before creating patients.
 - If `patient-service` cannot connect to billing, check `BILLING_SERVICE_ADDRESS` and `BILLING_SERVICE_GRPC_PORT`.
-- If you switch to a database other than the default embedded setup, make sure the Spring datasource environment variables are present.
+- If you switch to a different PostgreSQL container name, database name, or credentials, update the `SPRING_DATASOURCE_*` environment variables to match.
 
 ## Summary
 
