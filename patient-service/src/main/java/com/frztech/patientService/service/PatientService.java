@@ -4,6 +4,7 @@ import com.frztech.patientService.dto.PatientRequestDTO;
 import com.frztech.patientService.dto.PatientResponseDTO;
 import com.frztech.patientService.exception.EmailAlreadyExistsException;
 import com.frztech.patientService.exception.PatientNotFoundException;
+import com.frztech.patientService.grpc.BillingServiceGrpcClient;
 import com.frztech.patientService.mapper.PatientMapper;
 import com.frztech.patientService.model.Patient;
 import com.frztech.patientService.repository.PatientRepository;
@@ -17,9 +18,11 @@ import java.util.UUID;
 public class PatientService {
     //create a repository object via dependency injection
     private PatientRepository patientRepository;
+    private final BillingServiceGrpcClient billingServiceGrpcClient;
 
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository, BillingServiceGrpcClient billingServiceGrpcClient) {
         this.patientRepository = patientRepository;
+        this.billingServiceGrpcClient = billingServiceGrpcClient;
     }
 
     //get all patients
@@ -41,6 +44,9 @@ public class PatientService {
 
         //create an entry in the db
         Patient newPatient = patientRepository.save(PatientMapper.toModel(patientRequestDTO));
+
+        //if patient is created succesfully, create billing account
+        billingServiceGrpcClient.createBillingAccount(newPatient.getId().toString(), newPatient.getName(), newPatient.getEmail());
 
         //return the newly created patient
         return PatientMapper.toDTO(newPatient);
